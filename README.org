@@ -1,7 +1,7 @@
 
 
 * Idea
-  Converting a NFA to DFA requires two basic operation -> fetch and concatenation. Lets take a look at the following example.
+  Converting a NFA to DFA requires two basic operation -> ~fetch~ and ~concatenation~. Lets take a look at the following example.
 
   | States | 0    | 1    |
   |--------+------+------|
@@ -18,9 +18,25 @@ Its DFA will be-
   | ac     | ab | a  |
 
 
-As you can see, we are essentially concatenating (a,b) to (ab). And consider ~ab~. For it, we first need to fetch ~ab~, ~NULL~ and then unite them. And thus, we get ~ab~ and ~ac~.
+As you can see, we are essentially concatenating (a,b) to (ab). And consider ~ab~. For it, we first need to fetch ~a~, ~c~ and then unite them. And thus, we get ~ac~.
 
 And most importantly, ~our states will be expressed using strings~ because it allows us to convert (a,b) to ab very easily.
+* Input Format
+  - No comma allowed.
+  - For phi transition, type NULL.
+
+  A sample input can be:
+  #+begin_src text
+3
+a b c
+2
+0 1
+ab a
+NULL c
+NULL NULL
+a
+  #+end_src
+
 * Algorithm
 | States | 0    | 1    |
 |--------+------+------|
@@ -30,7 +46,7 @@ And most importantly, ~our states will be expressed using strings~ because it al
 
 
 function  create_state_transition(x):
-      - if x's transitions has been created already, return
+      - if x's transitions has been created already, return. Else->
       - Fetch x's transitions for alphabet 0 and unite them (e.g. for ab, we fetch ab,NULL and unite them to ab.)
       - Fetch x's transitions for alphabet 1 and unite them (e.g. for ab, we fetch a,c and unite them to ac.)
       - Now we are done creating the transition for state x! So lets push it to our dfa_table vector.
@@ -39,7 +55,7 @@ function  create_state_transition(x):
 ** Input Variable
    We make our input variables global so that we can access them from anywhere.
    - states: Stores all states. In our example, states={a,b,c}
-   - alphabets: Stores all states. In our example, states={0,1}
+   - alphabets: Stores all alphabets. In our example, states={0,1}
 #+begin_src c++
 vector<vector<string>> transition_table; 
 vector<string> states;
@@ -57,7 +73,7 @@ vector<pair<string,bool>>completed;
 
 ** Function Prototype
    - fetch: It returns the transition state for given state and alphabet. Much like delta function.
-   - unite: It unites the fetched states. In our example, for ~ab~, fetch(a,1)=a, fetch(b,1)=c and we unite them and get a new state ~ac~
+   - unite: It unites the fetched states. In our example, for ~ab~, ~fetch(a,1)=a~, ~fetch(b,1)=c~ and we unite them and get a new state ~ac~
    - create_state_transitions: Its the main algorithm function. It fetches all transitions and unites them using loops.
    - isCompleted: It checks whether we have already created the transitions for our state or not using our ~completed array~. 
 #+begin_src c++
@@ -71,8 +87,11 @@ void print_dfa();
 #+end_src
 ** fetch() 
 Its much like delta function.
+#+begin_src text
 fetch(a,1) = a
 fetch(b,1) = c
+#+end_src
+The code is:
    #+begin_src c++
 string fetch(char c, int alphabet){
   string s(1,c);
@@ -88,10 +107,11 @@ string fetch(char c, int alphabet){
    #+end_src
 ** unite()
    It unites the fetched states.
+#+begin_src text
 fetch(a,1) = a
 fetch(b,1) = c
 unite(a,c)=ac which is our new state!
-
+#+end_src
 We store the fetch states (a,c) in a vector store_state and pass it as a parameter to this function.
  #+begin_src c++
 string unite(vector<string> store_state){
@@ -132,21 +152,5 @@ void create_state_transitions(string state){
 }
    #+end_src
 
-* Input Format
-  - No comma allowed.
-  - For phi transition, type NULL.
-
-  A sample input can be:
-  #+begin_src text
-3
-a b c
-2
-0 1
-ab a
-NULL c
-NULL NULL
-a
-  #+end_src
-
 * About
-  Its a simple NFA to DFA converter. I plan to make a youtube video on it, someday when I have the necessary setup. In the meantime, feel free to raise a issue if you have any question or confusion on the concepts.
+  Its a simple NFA to DFA converter. I plan to make a youtube video on it, someday when I have the necessary setup. In the meantime, feel free to raise a ~issue~ if you have any question or confusion on the concepts.
