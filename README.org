@@ -1,0 +1,152 @@
+
+
+* Idea
+  Converting a NFA to DFA requires two basic operation -> fetch and concatenation. Lets take a look at the following example.
+
+  | States | 0    | 1    |
+  |--------+------+------|
+  | a      | a,b  | a    |
+  | b      | NULL | c    |
+  | c      | NULL | NULL |
+
+Its DFA will be-
+
+  | States | 0  | 1  |
+  |--------+----+----|
+  | a      | ab | a  |
+  | ab     | ab | ac |
+  | ac     | ab | a  |
+
+
+As you can see, we are essentially concatenating (a,b) to (ab). And consider ~ab~. For it, we first need to fetch ~ab~, ~NULL~ and then unite them. And thus, we get ~ab~ and ~ac~.
+
+And most importantly, ~our states will be expressed using strings~ because it allows us to convert (a,b) to ab very easily.
+* Algorithm
+| States | 0    | 1    |
+|--------+------+------|
+| a      | a,b  | a    |
+| b      | NULL | c    |
+| c      | NULL | NULL |
+
+
+function  create_state_transition(x):
+      - if x's transitions has been created already, return
+      - Fetch x's transitions for alphabet 0 and unite them (e.g. for ab, we fetch ab,NULL and unite them to ab.)
+      - Fetch x's transitions for alphabet 1 and unite them (e.g. for ab, we fetch a,c and unite them to ac.)
+      - Now we are done creating the transition for state x! So lets push it to our dfa_table vector.
+* Detailed Code Explanation
+  Do remember that we express states with string.
+** Input Variable
+   We make our input variables global so that we can access them from anywhere.
+   - states: Stores all states. In our example, states={a,b,c}
+   - alphabets: Stores all states. In our example, states={0,1}
+#+begin_src c++
+vector<vector<string>> transition_table; 
+vector<string> states;
+vector<string> alphabets;
+string start_state;
+#+end_src
+** Output Variables
+   We also make our output variables global so that we can easily access them from multiple functions.
+   - dfa_table: Its our output table that we will build.
+   - completed: Our ~create_state_transition()~ should not create transition for states that has already been created once. So we make a ~visited-like~ boolean array to keep track of the states that has already been created.
+#+begin_src c++
+vector<pair<string,vector<string>>> dfa_table;
+vector<pair<string,bool>>completed;
+#+end_src
+
+** Function Prototype
+   - fetch: It returns the transition state for given state and alphabet. Much like delta function.
+   - unite: It unites the fetched states. In our example, for ~ab~, fetch(a,1)=a, fetch(b,1)=c and we unite them and get a new state ~ac~
+   - create_state_transitions: Its the main algorithm function. It fetches all transitions and unites them using loops.
+   - isCompleted: It checks whether we have already created the transitions for our state or not using our ~completed array~. 
+#+begin_src c++
+void take_input();
+void print_output();
+void create_state_transitions(string state);
+string unite(vector<string> store_state);
+string fetch(char c, int alphabet);
+bool isCompleted(string state);
+void print_dfa();
+#+end_src
+** fetch() 
+Its much like delta function.
+fetch(a,1) = a
+fetch(b,1) = c
+   #+begin_src c++
+string fetch(char c, int alphabet){
+  string s(1,c);
+  int state_index = 0;
+  for(int i=0; i<states.size(); i++)
+    if(states[i]==s){
+      state_index=i;
+      break;
+    }
+  
+  return transition_table[state_index][alphabet];
+}
+   #+end_src
+** unite()
+   It unites the fetched states.
+fetch(a,1) = a
+fetch(b,1) = c
+unite(a,c)=ac which is our new state!
+
+We store the fetch states (a,c) in a vector store_state and pass it as a parameter to this function.
+ #+begin_src c++
+string unite(vector<string> store_state){
+  string new_state="";
+  for(int i=0; i<store_state.size(); i++){
+    if(store_state[i]!="NULL") new_state+=store_state[i];
+  }
+  if(new_state.size()==0) return "NULL";
+  return new_state;
+}
+ #+end_src
+** crete_state_transitions()
+   Its our main function. Its fairly easy to understand imo. At the last line, we have done a recursive call to all the transitions for our state. Because we have created many new states. For example,
+   | state |  0 |  1 |
+   | ab    | ab | ac |
+
+Here, we have created a new state ac. So we now need to crete transitions for this state. Thats why, we recursively called create_state_transitions() for the newly created states.
+
+   #+begin_src c++
+void create_state_transitions(string state){
+  if(isCompleted(state))return;
+
+  vector<string> dfa_row;
+  for(int a=0; a<alphabets.size(); a++){
+    vector<string>store_state;
+    for(int w=0; w<state.size(); w++){
+      store_state.push_back(fetch(state[w], a));
+    }
+    string new_state = unite(store_state);
+    dfa_row.push_back(new_state);
+  }
+
+  dfa_table.push_back(make_pair(state, dfa_row));
+  completed.push_back(make_pair(state,true));
+
+  // Now recursively call new states
+  for(int i=0; i<dfa_row.size(); i++) create_state_transitions(dfa_row[i]);
+}
+   #+end_src
+
+* Input Format
+  - No comma allowed.
+  - For phi transition, type NULL.
+
+  A sample input can be:
+  #+begin_src text
+3
+a b c
+2
+0 1
+ab a
+NULL c
+NULL NULL
+a
+  #+end_src
+
+* About
+  Its a simple NFA to DFA converter. I plan to make a youtube video on it, someday when I have the necessary setup. In the meantime, feel free to raise a issue if you have any question or confusion on the concepts.
