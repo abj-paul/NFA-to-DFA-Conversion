@@ -113,14 +113,29 @@ fetch(b,1) = c
 unite(a,c)=ac which is our new state!
 #+end_src
 We store the fetch states (a,c) in a vector store_state and pass it as a parameter to this function.
+What store does, is, it combines all the fetched states from nfa. If this scenario happens-
+#+begin_src text
+  fetch(x,1) = xy;
+  fetch(y,1) = xyz;
+  unite({xy,xyz})=?
+#+end_src
+How do we combine them? We know the result will be ~xyz~. How do we get this? If we make a set of all unique characters, the set will be ~{x,y,z}~. Then we can just concatenate them to get ~xyz~!
  #+begin_src c++
 string unite(vector<string> store_state){
-  string new_state="";
+  // Splitting all combined states into characters
+  set<char> split_s;
   for(int i=0; i<store_state.size(); i++){
-    if(store_state[i]!="NULL") new_state+=store_state[i];
+    if(store_state[i]=="NULL") continue;
+    for(int j=0; j<store_state[i].size(); j++){
+      split_s.insert(store_state[i][j]);
+    }
   }
-  if(new_state.size()==0) return "NULL";
+
+  // Building the new state
+  string new_state="";
+  for(auto element: split_s) new_state+=element;
   return new_state;
+  
 }
  #+end_src
 ** crete_state_transitions()
