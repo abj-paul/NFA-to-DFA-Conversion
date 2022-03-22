@@ -1,6 +1,7 @@
 #include<iostream>
 #include<vector>
 #include<string>
+#include<set>
 using namespace std;
 
 // Input Variable
@@ -18,7 +19,7 @@ vector<pair<string,bool>>completed;
 void take_input();
 void print_output();
 void create_state_transitions(string state);
-string unite(vector<string> store_state);
+string unite(string state, vector<string> store_state);
 string fetch(char c, int alphabet);
 bool isCompleted(string state);
 void print_dfa();
@@ -81,8 +82,9 @@ void print_output(){
         for(int j=0; j<alphabets.size(); j++){
 	  cout<<transition_table[i][j]<<" ";
         }
-        cout<<endl;
+        cout<<"\n";
     }
+    printf("Start state=%s\n",start_state);
     cout<<endl;
 
 }
@@ -105,13 +107,55 @@ string fetch(char c, int alphabet){
   return transition_table[state_index][alphabet];
 }
 
-string unite(vector<string> store_state){
-  string new_state="";
+bool isDuplicate(vector<string> store_state, int index, string state_being_built){
+  /*      for(int j=0; j<store_state.size(); j++){
+	if(j!=index && store_state[j]==store_state[index]) return true;
+      }
+      for(int i=0; i<store_state.size(); i++){
+	if(i!=index){
+	  for(int w1=0; w1<store_state[i].size(); w1++){
+	    for(int w2=0; w2<store_state[index].size(); w2++){
+	      if(store_state[i][w1]==store_state[index][w2]) return true;
+	    }
+	  }
+	}
+      }
+      return false;*/
+  for(int i=0; i<state_being_built.size(); i++){
+    for(int j=0; j<store_state.size(); j++){
+      for(int k=0; k<store_state[j].size(); k++){
+	if(state_being_built[i]==store_state[j][k]) return true;
+      }
+    }
+  }
+}
+
+string unite(string current_state, vector<string> store_state){
+  /*  string new_state="";
   for(int i=0; i<store_state.size(); i++){
-    if(store_state[i]!="NULL") new_state+=store_state[i];
+    if(store_state[i]!="NULL")) {
+      // Checking if the store_State has duplicated
+
+      if(!isDuplicate(store_state,i,store_state)) new_state+=store_state[i];
+    }
   }
   if(new_state.size()==0) return "NULL";
+  return new_state; */
+
+  // Splitting all combined states into characters
+  set<char> split_s;
+  for(int i=0; i<store_state.size(); i++){
+    if(store_state[i]=="NULL") continue;
+    for(int j=0; j<store_state[i].size(); j++){
+      split_s.insert(store_state[i][j]);
+    }
+  }
+
+  // Building the new state
+  string new_state="";
+  for(auto element: split_s) new_state+=element;
   return new_state;
+  
 }
 
 void create_state_transitions(string state){
@@ -123,7 +167,7 @@ void create_state_transitions(string state){
     for(int w=0; w<state.size(); w++){
       store_state.push_back(fetch(state[w], a));
     }
-    string new_state = unite(store_state);
+    string new_state = unite(state,store_state);
     dfa_row.push_back(new_state);
   }
 
@@ -131,7 +175,9 @@ void create_state_transitions(string state){
   completed.push_back(make_pair(state,true));
 
   // Now recursively call new states
-  for(int i=0; i<dfa_row.size(); i++) create_state_transitions(dfa_row[i]);
+  for(int i=0; i<dfa_row.size(); i++)
+    if(dfa_row[i]!="NULL")
+      create_state_transitions(dfa_row[i]);
 }
 
 
